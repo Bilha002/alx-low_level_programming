@@ -1,34 +1,39 @@
 #include "main.h"
+#include <stdlib.h>
 
 /**
- * append_text_to_file - Appends text at the end of a file.
+ * read_textfile - Reads a text file and prints it to POSIX stdout.
  * @filename: A pointer to the name of the file.
- * @text_content: The string to add to the end of the file.
+ * @letters: The number of letters the
+ *           function should read and print.
  *
- * Return: If the function fails or filename is NULL - -1.
- *         If the file does not exist the user lacks write permissions - -1.
- *         Otherwise - 1.
+ * Return: If the function fails or filename is NULL - 0.
+ *         O/w - the actual number of bytes the function can read and print.
  */
-int append_text_to_file(const char *filename, char *text_content)
+ssize_t read_textfile(const char *filename, size_t letters)
 {
-	int o, w, len = 0;
+	ssize_t o, r, w;
+	char *buffer;
 
 	if (filename == NULL)
-		return (-1);
+		return (0);
 
-	if (text_content != NULL)
+	buffer = malloc(sizeof(char) * letters);
+	if (buffer == NULL)
+		return (0);
+
+	o = open(filename, O_RDONLY);
+	r = read(o, buffer, letters);
+	w = write(STDOUT_FILENO, buffer, r);
+
+	if (o == -1 || r == -1 || w == -1 || w != r)
 	{
-		for (len = 0; text_content[len];)
-			len++;
+		free(buffer);
+		return (0);
 	}
 
-	o = open(filename, O_WRONLY | O_APPEND);
-	w = write(o, text_content, len);
-
-	if (o == -1 || w == -1)
-		return (-1);
-
+	free(buffer);
 	close(o);
 
-	return (1);
+	return (w);
 }
